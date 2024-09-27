@@ -6,6 +6,7 @@ import { User } from './user/entities/user.entity';
 import { UserDetails } from './user-detail/entities/user-detail.entity';
 import { UserModule } from './user/user.module';
 import { UserDetailsModule } from './user-detail/user-detail.module';
+import { FoodRecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserDetailsModule } from './user-detail/user-detail.module';
     }),
     UserModule,
     UserDetailsModule,
+    FoodRecommendationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

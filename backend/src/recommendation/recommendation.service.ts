@@ -8,13 +8,15 @@ export class FoodRecommendationService {
   constructor(private readonly httpService: HttpService) {}
 
   async recommendation(recommendation: FoodRecommendationDto) {
-    return recommendation;
+    const { nutritionalValues, ingredients } = recommendation;
+    const res = this.getRecommendations(nutritionalValues, ingredients);
+    return res;
   }
 
   async getRecommendations(
     nutritionInput: number[],
     ingredients: string[],
-    params: { n_neighbors?: number; return_distance?: boolean },
+    params?: { n_neighbors?: number; return_distance?: boolean },
   ): Promise<any> {
     const requestBody = {
       nutrition_input: nutritionInput,
