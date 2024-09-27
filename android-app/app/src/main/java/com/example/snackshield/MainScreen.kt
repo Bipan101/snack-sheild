@@ -40,7 +40,7 @@ fun MainScreen(sessionManager: SessionManager) {
 }
 
 fun getNavDestination(sessionManager: SessionManager): String {
-    return AuthNavGraph.AUTH_ROUTE
+    return HomeNavGraph.HOME_ROUTE
 //    return if (sessionManager.getUser() != null && sessionManager.getUser()!!.token.isNotEmpty()) {
 //        HomeNavGraph.HOME_ROUTE
 //    } else {

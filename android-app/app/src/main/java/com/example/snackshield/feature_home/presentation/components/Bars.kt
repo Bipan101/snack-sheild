@@ -47,27 +47,19 @@ fun BottomBar(toScan: () -> Unit) {
 
 @Composable
 fun SearchBoxTopBar(toSearch: () -> Unit, toProfile: () -> Unit) {
-    Column(
+    Row(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .fillMaxWidth(0.9f)
                 .background(MaterialTheme.colorScheme.surfaceContainer),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(onClick = {
-                toProfile()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = "Camera",
-                    modifier = Modifier.size(80.dp),
-                )
-            }
             TextButton(
                 onClick = toSearch
             ) {
@@ -76,15 +68,16 @@ fun SearchBoxTopBar(toSearch: () -> Unit, toProfile: () -> Unit) {
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.inverseSurface)
                 )
             }
-            IconButton(onClick = {
-                toProfile()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Camera",
-                    modifier = Modifier.size(80.dp)
-                )
-            }
+
+        }
+        IconButton(onClick = {
+            toProfile()
+        }) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Camera",
+                modifier = Modifier.size(80.dp)
+            )
         }
     }
 }
