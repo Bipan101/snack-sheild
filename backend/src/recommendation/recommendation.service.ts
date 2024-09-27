@@ -9,7 +9,7 @@ export class FoodRecommendationService {
 
   async recommendation(recommendation: FoodRecommendationDto) {
     const { nutritionalValues, ingredients } = recommendation;
-    const res = this.getRecommendations(nutritionalValues, ingredients);
+    const res = await this.getRecommendations(nutritionalValues, ingredients);
     return res;
   }
 
@@ -23,13 +23,30 @@ export class FoodRecommendationService {
       ingredients: ingredients,
       params: params,
     };
-
-    const url = 'http://localhost:8080/predict/';
-
+    const req = {
+      nutrition_input: [
+        100.0, 200.0, 150.0, 120.0, 30.0, 0.0, 60.0, 10.0, 90.0,
+      ],
+      ingredients: ['chicken', 'tomato', 'garlic'],
+      params: {
+        n_neighbors: 5,
+        return_distance: false,
+      },
+    };
+    const url = 'http://localhost:8080/predict';
+    // console.log(req);
     try {
       const response = await firstValueFrom(
-        this.httpService.post(url, requestBody),
+        this.httpService.post(url, req, {
+          headers: {
+            'Content-Type': 'application/json', // Ensure correct content type
+          },
+        }),
       );
+
+      if (!response) {
+        throw new Error('Failed to fetch recommendations');
+      }
       return response.data;
     } catch (error) {
       console.error('Error calling the Python API:', error);
