@@ -8,6 +8,7 @@ export class FoodRecommendationService {
   constructor(private readonly httpService: HttpService) {}
 
   async recommendation(recommendation: FoodRecommendationDto) {
+    console.log(recommendation);
     const { nutrientInput, ingredients } = recommendation;
     const {
       calories,
