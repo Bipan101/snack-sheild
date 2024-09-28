@@ -23,13 +23,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,19 +47,15 @@ import com.example.snackshield.common.components.AppTextField
 import com.example.snackshield.common.components.AppTopBar
 import com.example.snackshield.common.components.Spacing
 import com.example.snackshield.common.util.ActivityAndPermission
+import com.example.snackshield.common.util.Permission
 import com.example.snackshield.common.util.StorageAccess
 import com.example.snackshield.feature_auth.presentation.components.SubmitButton
 import com.example.snackshield.feature_scan.presentation.ScanViewModel
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
-const val TAG = "ScanScreen"
-
 @Composable
-fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
+fun ScanTextScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse : () -> Unit) {
     val context = LocalContext.current
     var storageAccess by remember {
         mutableStateOf(StorageAccess.Checking)
@@ -110,7 +106,7 @@ fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
             }
         }
     )
-    val checkGalleryPermission = {
+    val checkAndLaunchGalleryPermission = {
         ActivityAndPermission.checkAndRequestGalleryPermission(
             context = context,
             permissionList = mediaPermission,
@@ -120,6 +116,15 @@ fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
             if (storageAccess == StorageAccess.Full || storageAccess == StorageAccess.Partial) {
                 getMedia.launch("image/*")
             }
+        }
+    }
+    val checkGalleryPermission = {
+        ActivityAndPermission.checkAndRequestGalleryPermission(
+            context = context,
+            permissionList = mediaPermission,
+            launcher = mediaPermissionLauncher
+        ) {
+            storageAccess = it
         }
     }
 
@@ -148,7 +153,7 @@ fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
     )
 
 
-    val checkCameraPermission = {
+    val checkAndLaunchCameraPermission = {
         ActivityAndPermission.checkAndRequestPermission(
             context = context,
             permission = CAMERA,
@@ -160,28 +165,33 @@ fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
             }
         }
     }
-
+    val checkCameraPermission = {
+        ActivityAndPermission.checkAndRequestPermission(
+            context = context,
+            permission = CAMERA,
+            launcher = cameraPermissionLauncher
+        ) {
+            cameraAccess = Permission.Allowed
+        }
+    }
+    LaunchedEffect(true) {
+        checkCameraPermission()
+        checkGalleryPermission()
+    }
     // Text recognizer initialization
     val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-// Barcode scanner initialization
-    val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(
-            Barcode.FORMAT_ALL_FORMATS
-        )
-        .build()
-    val scanner = BarcodeScanning.getClient(options)
-
     Column {
-        AppTopBar(identifier = "Scan snack") {
-        goBack()
+        AppTopBar(identifier = "Scan label") {
+            goBack()
+            viewModel.resetState()
         }
-        ScanView(
+        ScanTextView(
             itemName,
             changeItemName = { itemName = it },
             imageUri,
-            checkCameraPermission,
-            checkGalleryPermission,
+            checkAndLaunchCameraPermission,
+            checkAndLaunchGalleryPermission,
             textScan = {
                 // Process image for text recognition
                 recognizer.process(viewModel.getImageFromUri(context, imageUri))
@@ -195,36 +205,20 @@ fun ScanScreen(viewModel: ScanViewModel, goBack : () -> Unit) {
                         scannedText = "No text found to scan."
                     }
             },
-            barcodeScan = {
-                // Process image for barcode scanning
-                scanner.process(viewModel.getImageFromUri(context, imageUri))
-                    .addOnSuccessListener { barcodes ->
-                        for (barcode in barcodes) {
-                            Log.d(TAG, "ScanScreen (Barcode): ${barcode.rawValue}")
-                            // Handle each barcode result here
-                            scannedText = barcode.rawValue.toString()
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        Log.d(TAG, "ScanScreen (Barcode): Failure", e)
-                        scannedText = "No barcode found to scan."
-                    }
-            },
             scannedText,
         )
     }
+
 }
 
-
 @Composable
-fun ScanView(
+fun ScanTextView(
     itemName: String,
     changeItemName: (String) -> Unit,
     imageUri: Uri?,
     checkCameraPermission: () -> Unit,
     checkGalleryPermission: () -> Unit,
     textScan: () -> Unit,
-    barcodeScan: () -> Unit,
     scannedText: String
 ) {
     LazyColumn(
@@ -250,18 +244,17 @@ fun ScanView(
                 }
             )
             Spacing(height = 12)
-            ScanField(
-                identifier = "Snack image",
+            TextSnackField(
+                identifier = "Snack label image",
                 value = imageUri,
-                checkCameraPermission,
                 checkGalleryPermission,
-                textScan,
-                barcodeScan
+                checkCameraPermission,
+                textScan
             )
             Spacing(height = 12)
             if (scannedText.isNotEmpty()) {
                 AppTextField(
-                    identifier = "Snack detail",
+                    identifier = "Snack label detail",
                     value = scannedText,
                     onValueChange = {},
                     placeholder = {},
@@ -277,18 +270,19 @@ fun ScanView(
 }
 
 @Composable
-fun ScanField(
+fun TextSnackField(
     identifier: String = "",
     value: Uri?,
-    checkCameraPermission: () -> Unit,
     checkGalleryPermission: () -> Unit,
-    textScan: () -> Unit,
-    barcodeScan: () -> Unit
+    checkCameraPermission: () -> Unit,
+    textScan: () -> Unit
 ) {
-    Text(text = identifier,  style = MaterialTheme.typography.headlineSmall.copy(
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Normal
-    ))
+    Text(
+        text = identifier, style = MaterialTheme.typography.headlineSmall.copy(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal
+        )
+    )
     Spacing(height = 8)
     Column(
         modifier = Modifier
@@ -297,23 +291,21 @@ fun ScanField(
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(12.dp)
     ) {
-        ScanFieldOptions(
+        TextSnackFieldOptions(
+            textScan,
             checkCameraPermission,
             checkGalleryPermission,
-            value,
-            textScan,
-            barcodeScan
+            value
         )
     }
 }
 
 @Composable
-fun ScanFieldOptions(
+fun TextSnackFieldOptions(
+    textScan: () -> Unit,
     checkCameraPermission: () -> Unit,
     checkGalleryPermission: () -> Unit,
-    image: Uri?,
-    textScan: () -> Unit,
-    barcodeScan: () -> Unit
+    value: Uri?
 ) {
     Row(
         modifier = Modifier
@@ -334,10 +326,10 @@ fun ScanFieldOptions(
                 .clickable { checkGalleryPermission() })
     }
     Spacing(height = 12)
-    Log.d("ImageBuilder", "ScanFieldOptions: $image")
-    if (image != Uri.EMPTY) {
+    Log.d("ImageBuilder", "ScanFieldOptions: $value")
+    if (value != Uri.EMPTY) {
         Image(
-            painter = rememberAsyncImagePainter(model = image),
+            painter = rememberAsyncImagePainter(model = value),
             contentDescription = "image",
             modifier = Modifier
                 .padding(4.dp)
@@ -345,36 +337,25 @@ fun ScanFieldOptions(
                 .clip(RoundedCornerShape(12.dp)),
             contentScale = ContentScale.Crop,
         )
-        MoreScanFieldOptions(textScan, barcodeScan)
+        MoreTextScanFieldOptions(
+            textScan
+        )
     }
 }
 
 @Composable
-fun MoreScanFieldOptions(textScan: () -> Unit, barcodeScan: () -> Unit) {
+fun MoreTextScanFieldOptions(textScan: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
     ) {
         Icon(
             imageVector = Icons.Default.TextFields,
-            contentDescription = "text",
+            contentDescription = "scan",
             modifier = Modifier
                 .size(32.dp)
                 .clickable {
                     textScan.invoke()
                 })
-        Spacing(width = 8)
-        Icon(
-            imageVector = Icons.Default.Fullscreen,
-            contentDescription = "scan",
-            modifier = Modifier
-                .size(32.dp)
-                .clickable {
-                    barcodeScan.invoke()
-                })
     }
-}
-
-enum class Permission {
-    Allowed, NotAllowed, Checking
 }

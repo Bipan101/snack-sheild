@@ -1,5 +1,5 @@
 package com.example.snackshield.common.constants
 
 object NetworkConstants {
-    const val BASE_URL = "http://0.tcp.in.ngrok.io:11663/api/v1/"
+    const val BASE_URL = "https://7371-110-34-13-5.ngrok-free.app/"
 }

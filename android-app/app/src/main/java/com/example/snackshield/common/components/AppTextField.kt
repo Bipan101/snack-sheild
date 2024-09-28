@@ -3,6 +3,7 @@ package com.example.snackshield.common.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +29,8 @@ fun AppTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    readOnly : Boolean = false
+    readOnly : Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column {
         if (identifier.isNotEmpty()) {
@@ -54,6 +56,7 @@ fun AppTextField(
                 focusedIndicatorColor = MaterialTheme.colorScheme.background,
                 unfocusedIndicatorColor = MaterialTheme.colorScheme.background,
             ),
+            keyboardOptions = keyboardOptions,
             modifier = modifier
                 .fillMaxWidth(),
         )

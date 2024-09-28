@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.material.icons.filled.ImportContacts
 import androidx.compose.material.icons.filled.Recommend
 import androidx.compose.material.icons.filled.SettingsOverscan
 import androidx.compose.material3.HorizontalDivider
@@ -33,7 +33,10 @@ import com.example.snackshield.R
 import com.example.snackshield.feature_home.presentation.components.SearchBoxTopBar
 
 @Composable
-fun HomeScreen(toSearch: () -> Unit, toProfile: () -> Unit, toScan: () -> Unit) {
+fun HomeScreen(
+    toSearch: () -> Unit, toProfile: () -> Unit, toBarcode: () -> Unit,
+    toLabel: () -> Unit, toFood: () -> Unit, toRecommend: () -> Unit
+) {
     Scaffold(
         topBar = {
             SearchBoxTopBar(
@@ -46,20 +49,30 @@ fun HomeScreen(toSearch: () -> Unit, toProfile: () -> Unit, toScan: () -> Unit) 
             modifier = Modifier
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
-            HomeView()
+            HomeView(toBarcode, toLabel, toFood, toRecommend)
         }
     }
 }
 
 @Composable
-fun HomeView() {
-    HomeOptions()
+fun HomeView(
+    toBarcode: () -> Unit,
+    toLabel: () -> Unit,
+    toFood: () -> Unit,
+    toRecommend: () -> Unit
+) {
+    HomeOptions(toBarcode, toLabel, toFood, toRecommend)
     HorizontalDivider()
     HomeRecentData()
 }
 
 @Composable
-fun HomeOptions() {
+fun HomeOptions(
+    toBarcode: () -> Unit,
+    toLabel: () -> Unit,
+    toFood: () -> Unit,
+    toRecommend: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,29 +80,46 @@ fun HomeOptions() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        HomeOption(text = "Scan Text", icon = Icons.Default.SettingsOverscan) { }
-        HomeOption(text = "Scan Image", icon = Icons.Default.DocumentScanner) { }
-        HomeOption(text = "Import Image", icon = Icons.Default.ImportContacts) { }
-        HomeOption(text = "Recommend", icon = Icons.Default.Recommend) { }
+        HomeOption(text = "Scan Label", icon = Icons.Default.SettingsOverscan) {
+            toLabel()
+        }
+        HomeOption(text = "Scan Barcode", icon = Icons.Default.BarChart) {
+            toBarcode()
+        }
+        HomeOption(text = "Scan Food", icon = Icons.Default.DocumentScanner) {
+            toFood()
+        }
+        HomeOption(text = "Recommend", icon = Icons.Default.Recommend) {
+            toRecommend()
+        }
     }
 }
 
 @Composable
-fun HomeOption(text: String,icon : ImageVector, onClick : () -> Unit) {
+fun HomeOption(text: String, icon: ImageVector, onClick: () -> Unit) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        IconButton(onClick = {
-            onClick()
-        }, modifier = Modifier
-            .size(72.dp)) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                modifier = Modifier.size(60.dp)
-            )
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            IconButton(
+                onClick = {
+                    onClick()
+                }, modifier = Modifier
+                    .size(60.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = text,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+            Text(text = text, style = MaterialTheme.typography.labelSmall)
         }
-        Text(text = text, style = MaterialTheme.typography.labelMedium)
+
     }
 }
 

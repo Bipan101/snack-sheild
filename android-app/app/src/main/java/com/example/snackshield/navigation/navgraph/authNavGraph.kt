@@ -1,6 +1,9 @@
 package com.example.snackshield.navigation.navgraph
 
+import android.view.View
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -11,7 +14,7 @@ import com.example.snackshield.feature_auth.presentation.screen.SignInScreen
 import com.example.snackshield.feature_auth.presentation.screen.SignUpScreen
 import com.example.snackshield.navigation.elements.navigateWithSingleTop
 
-fun NavGraphBuilder.authNavGraph(navController: NavController, authViewModel: AuthViewModel) {
+fun NavGraphBuilder.authNavGraph(navController: NavController) {
     navigation(startDestination = AuthNavGraph.SIGNIN_SCREEN, route = AuthNavGraph.AUTH_ROUTE) {
         composable(
             route = AuthNavGraph.SIGNIN_SCREEN,
@@ -20,6 +23,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavController, authViewModel: Au
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left) },
         ) {
+            val authViewModel : AuthViewModel = hiltViewModel()
             SignInScreen(
                 toSignUp = { navController.navigateWithSingleTop(AuthNavGraph.SIGNUP_SCREEN) },
                 toHome = { navController.navigateWithSingleTop(HomeNavGraph.HOME_ROUTE) },
@@ -33,6 +37,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavController, authViewModel: Au
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
+            val authViewModel : AuthViewModel = hiltViewModel()
             SignUpScreen(
                 goBack = { navController.popBackStack() },
                 toDetail = { navController.navigateWithSingleTop(AuthNavGraph.ALLERGY_SCREEN) },
@@ -46,7 +51,9 @@ fun NavGraphBuilder.authNavGraph(navController: NavController, authViewModel: Au
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
+            val authViewModel : AuthViewModel = hiltViewModel()
             DetailScreen(
+                goBack = navController::navigateUp,
                 toHome = { navController.navigateWithSingleTop(HomeNavGraph.HOME_ROUTE) },
                 authViewModel
             )
