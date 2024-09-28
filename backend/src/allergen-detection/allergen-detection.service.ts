@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AllergenDetectionDto } from './dto/allergen-detection.dto';
 import { UserDetailsService } from '../user-detail/user-detail.service';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
+import * as fs from 'fs';
+import * as sharp from 'sharp';
 
 const allergensData = {
   dairy: ['milk', 'cheese', 'yogurt', 'butter', 'cream'],
@@ -15,7 +19,10 @@ const allergensData = {
 
 @Injectable()
 export class AllergenDetectionService {
-  constructor(private readonly userDetailsService: UserDetailsService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly userDetailsService: UserDetailsService,
+  ) {}
 
   async detectAllergenByLabel(allergenData: AllergenDetectionDto) {
     const { userId, ingredients } = allergenData;
@@ -44,5 +51,30 @@ export class AllergenDetectionService {
     return Array.from(detectedAllergens);
   }
 
-  async detectAllergenByImage() {}
+  async detectAllergenByImage(filePath: string) {
+    try {
+      const imageBuffer = fs.readFileSync(filePath);
+
+      // Resize the image and compress it using sharp
+      const compressedImage = await sharp(imageBuffer)
+        .resize({ width: 800 }) // Resize to 800px width (or any appropriate size)
+        .jpeg({ quality: 70 }) // Compress to JPEG with 70% quality
+        .toBuffer();
+      const url =
+        'https://detect.roboflow.com/food-allergy-detection-project/39';
+      const apiKey = 'HNSn6lNSiNEKlXXQTgSD';
+
+      // Make the POST request
+      const response = await lastValueFrom(
+        this.httpService.post(url, compressedImage.toString('base64'), {
+          params: { api_key: apiKey },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error detecting allergen:', error);
+    }
+  }
 }

@@ -7,6 +7,7 @@ import { UserDetails } from './user-detail/entities/user-detail.entity';
 import { UserModule } from './user/user.module';
 import { UserDetailsModule } from './user-detail/user-detail.module';
 import { FoodRecommendationModule } from './recommendation/recommendation.module';
+import { AllergenDetectionModule } from './allergen-detection/allergen-detection.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { FoodRecommendationModule } from './recommendation/recommendation.module
     UserModule,
     UserDetailsModule,
     FoodRecommendationModule,
+    AllergenDetectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
