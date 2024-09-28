@@ -7,6 +7,7 @@ export class BarCodeScanService {
   constructor(private readonly httpService: HttpService) {}
 
   async getData(barcode: string) {
+    console.log(barcode);
     const res = await this.getBarCodeData(barcode);
     return res;
   }
@@ -16,7 +17,7 @@ export class BarCodeScanService {
     try {
       const response = await firstValueFrom(this.httpService.get(url));
       if (!response) {
-        throw new Error('Failed to Bar code data');
+        throw new Error();
       }
 
       const {
@@ -26,10 +27,11 @@ export class BarCodeScanService {
         product_name,
       } = response.data.product;
 
-      const nutrientPercentages = this.calculateNutrientPercentages(nutriments);
-      const ingredientData = this.processIngredientData(
-        ingredients_text_with_allergens_fr,
-      );
+      const nutrientPercentages =
+        nutriments && this.calculateNutrientPercentages(nutriments);
+      const ingredientData =
+        ingredients_text_with_allergens_fr &&
+        this.processIngredientData(ingredients_text_with_allergens_fr);
       return {
         productName: product_name,
         ingredientData: ingredientData,
@@ -37,7 +39,7 @@ export class BarCodeScanService {
         nutritionDataPerGm: nutrition_data_per,
       };
     } catch (error) {
-      throw new Error('Failed to Bar code data');
+      throw new Error(error.message);
     }
   }
 
@@ -66,21 +68,24 @@ export class BarCodeScanService {
   }
 
   private processIngredientData(input: string) {
-    const cleanedData = input
-      .replace(/<span class="allergen">/g, '')
-      .replace(/<\/span>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    if (!input) return;
+    const cleanedData =
+      input &&
+      input
+        ?.replace(/<span class="allergen">/g, '')
+        ?.replace(/<\/span>/g, '')
+        ?.replace(/\s+/g, ' ')
+        ?.trim();
 
-    const ingredientsPart = cleanedData.split(':')[1].trim();
+    const ingredientsPart = cleanedData?.split(':')[1]?.trim();
     const ingredientsArray = ingredientsPart
-      .split(',')
-      .map((ingredient) => ingredient.trim());
+      ?.split(',')
+      ?.map((ingredient) => ingredient.trim());
 
     const allergenMatches = [
-      ...input.matchAll(/<span class="allergen">(.*?)<\/span>/g),
+      ...input?.matchAll(/<span class="allergen">(.*?)<\/span>/g),
     ];
-    const allergens = allergenMatches.map((match) => match[1].trim());
+    const allergens = allergenMatches?.map((match) => match[1]?.trim());
 
     const formattedData = {
       ingredients: ingredientsArray,
