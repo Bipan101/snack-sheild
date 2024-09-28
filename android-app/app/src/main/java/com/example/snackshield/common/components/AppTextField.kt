@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppTextField(
+    modifier: Modifier = Modifier,
     identifier : String = "",
     value:String,
     onValueChange : (String) -> Unit,
@@ -53,7 +54,7 @@ fun AppTextField(
                 focusedIndicatorColor = MaterialTheme.colorScheme.background,
                 unfocusedIndicatorColor = MaterialTheme.colorScheme.background,
             ),
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth(),
         )
     }
