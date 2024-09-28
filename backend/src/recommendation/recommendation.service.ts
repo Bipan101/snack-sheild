@@ -8,7 +8,30 @@ export class FoodRecommendationService {
   constructor(private readonly httpService: HttpService) {}
 
   async recommendation(recommendation: FoodRecommendationDto) {
-    const { nutritionalValues, ingredients } = recommendation;
+    const { nutrientInput, ingredients } = recommendation;
+    const {
+      calories,
+      fatContent,
+      saturatedFatContent,
+      cholesterolContent,
+      sodiumContent,
+      carbohydrateContent,
+      fiberContent,
+      sugarContent,
+      proteinContent,
+    } = nutrientInput;
+    const nutritionalValues = [
+      calories || 0,
+      fatContent || 0,
+      saturatedFatContent || 0,
+      cholesterolContent || 0,
+      sodiumContent || 0,
+      carbohydrateContent || 0,
+      fiberContent || 0,
+      sugarContent || 0,
+      proteinContent || 0,
+    ];
+
     const res = await this.getRecommendations(nutritionalValues, ingredients);
     return res;
   }
@@ -16,28 +39,27 @@ export class FoodRecommendationService {
   async getRecommendations(
     nutritionInput: number[],
     ingredients: string[],
-    params?: { n_neighbors?: number; return_distance?: boolean },
   ): Promise<any> {
     const requestBody = {
       nutrition_input: nutritionInput,
       ingredients: ingredients,
-      params: params,
+      params: { n_neighbors: 5, return_distance: false },
     };
-    const req = {
-      nutrition_input: [
-        100.0, 200.0, 150.0, 120.0, 30.0, 0.0, 60.0, 10.0, 90.0,
-      ],
-      ingredients: ['chicken', 'tomato', 'garlic'],
-      params: {
-        n_neighbors: 5,
-        return_distance: false,
-      },
-    };
+
+    // const req = {
+    //   nutrition_input: [
+    //     100.0, 200.0, 150.0, 120.0, 30.0, 0.0, 60.0, 10.0, 90.0,
+    //   ],
+    //   ingredients: ['okra', 'tomato', 'garlic'],
+    //   params: {
+    //     n_neighbors: 5,
+    //     return_distance: false,
+    //   },
+    // };
     const url = 'http://localhost:8080/predict';
-    // console.log(req);
     try {
       const response = await firstValueFrom(
-        this.httpService.post(url, req, {
+        this.httpService.post(url, requestBody, {
           headers: {
             'Content-Type': 'application/json', // Ensure correct content type
           },
@@ -49,7 +71,6 @@ export class FoodRecommendationService {
       }
       return response.data;
     } catch (error) {
-      console.error('Error calling the Python API:', error);
       throw new Error('Failed to fetch recommendations');
     }
   }
