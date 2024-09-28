@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { UserDetailsModule } from './user-detail/user-detail.module';
 import { FoodRecommendationModule } from './recommendation/recommendation.module';
 import { AllergenDetectionModule } from './allergen-detection/allergen-detection.module';
+import { BarCodeScanModule } from './bar-code-scan/bar-code-scan.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AllergenDetectionModule } from './allergen-detection/allergen-detection
     UserDetailsModule,
     FoodRecommendationModule,
     AllergenDetectionModule,
+    BarCodeScanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

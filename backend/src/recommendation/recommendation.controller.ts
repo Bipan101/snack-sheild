@@ -20,6 +20,6 @@ export class FoodRecommendationController {
   async create(@Body() recommendation: FoodRecommendationDto) {
     const newUser =
       await this.recommendationService.recommendation(recommendation);
-    return { data: newUser, message: 'user created Successfully' };
+    return { data: newUser, message: 'recommendation Successfull' };
   }
 }
