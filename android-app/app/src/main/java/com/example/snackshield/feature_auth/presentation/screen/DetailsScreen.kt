@@ -1,6 +1,8 @@
 package com.example.snackshield.feature_auth.presentation.screen
 
+import android.annotation.SuppressLint
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -18,20 +20,24 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LineWeight
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -39,28 +45,38 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.snackshield.common.components.AppTextField
+import com.example.snackshield.common.components.ConfirmDialog
 import com.example.snackshield.common.components.Spacing
+import com.example.snackshield.feature_auth.domain.model.Detail
+import com.example.snackshield.feature_auth.presentation.AuthEvents
+import com.example.snackshield.feature_auth.presentation.AuthUiState
 import com.example.snackshield.feature_auth.presentation.AuthViewModel
 import com.example.snackshield.feature_auth.presentation.components.SubmitButton
+import com.example.snackshield.feature_scan.presentation.ScanUiState
 
 const val TAG = "DETAIL_SCREEN"
 
 @Composable
-fun DetailScreen(toHome: () -> Unit, authViewModel: AuthViewModel) {
+fun DetailScreen(goBack : ()-> Unit,toHome: () -> Unit, authViewModel: AuthViewModel) {
     var age by remember {
         mutableStateOf("")
     }
@@ -69,10 +85,23 @@ fun DetailScreen(toHome: () -> Unit, authViewModel: AuthViewModel) {
     }
     var height by remember { mutableStateOf("") }
     var gender by remember {
-        mutableStateOf("male")
+        mutableStateOf("")
     }
     var allergies by remember {
         mutableStateOf(emptyList<String>())
+    }
+    var dietPreference by remember {
+        mutableStateOf("")
+    }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    BackHandler(enabled = true) {
+        showConfirmDialog = true
+    }
+    val event = authViewModel::onEvent
+    val uiState by authViewModel.authState.collectAsState()
+    val state by authViewModel.state.collectAsState()
+    LaunchedEffect(true) { 
+        event.invoke(AuthEvents.GetUserId)
     }
     LazyColumn(
         modifier = Modifier
@@ -82,7 +111,7 @@ fun DetailScreen(toHome: () -> Unit, authViewModel: AuthViewModel) {
     ) {
         item {
             DetailView(
-                age, weight, height, gender, allergies,
+                age, weight, height, gender, allergies,dietPreference,
                 onAgeChange = { age = it },
                 onWeightChange = { weight = it },
                 onHeightChange = {
@@ -98,9 +127,22 @@ fun DetailScreen(toHome: () -> Unit, authViewModel: AuthViewModel) {
                     }
                     Log.d(TAG, "DetailScreen: $allergies")
                 },
+                onDietChange = {
+                    dietPreference = it
+                },
+                onSubmit = {
+                    event.invoke(AuthEvents.UserDetail(Detail(age.toInt(),weight.toInt(),height.toInt(),gender,allergies, state.userId!! ,dietPreference )))
+                },
+                uiState,
                 toHome
             )
         }
+    }
+    if (showConfirmDialog) {
+        ConfirmDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            goBack = goBack
+        )
     }
 }
 
@@ -127,15 +169,18 @@ fun DetailView(
     height: String,
     gender: String,
     allergies: List<String>,
+    dietPreference : String,
     onAgeChange: (String) -> Unit,
     onWeightChange: (String) -> Unit,
     onHeightChange: (String) -> Unit,
     onGenderChange: (String) -> Unit,
     onAllergiesChange: (String) -> Unit,
+    onDietChange : (String) -> Unit,
+    onSubmit : () -> Unit,
+    uiState: AuthUiState,
     toHome: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
@@ -160,18 +205,34 @@ fun DetailView(
             height,
             gender,
             allergies,
+            dietPreference,
             onAgeChange,
             onWeightChange,
             onHeightChange,
             onGenderChange,
+            onDietChange,
             onShowBottomSheet = {
                 showBottomSheet = true
             }
         )
         Spacing(height = 24)
-        SubmitButton(text = "Done") {
-            toHome()
+        when(uiState) {
+            is AuthUiState.Error ->  SubmitButton(text = "Error") {
+                onSubmit()
+            }
+            AuthUiState.Loading -> SubmitButton(text = "Loading...") {
+            }
+            AuthUiState.Remaining -> SubmitButton(text = "Done") {
+                onSubmit()
+            }
+            AuthUiState.Success -> {
+                SubmitButton(text = "Done") {
+                }
+                toHome()
+            }
+
         }
+
     }
 }
 
@@ -182,10 +243,12 @@ fun DetailTextFields(
     height: String,
     gender: String,
     allergies: List<String>,
+    dietPreference: String,
     onAgeChange: (String) -> Unit,
     onWeightChange: (String) -> Unit,
     onHeightChange: (String) -> Unit,
     onGenderChange: (String) -> Unit,
+    onDietChange: (String) -> Unit,
     onShowBottomSheet: () -> Unit
 ) {
     DetailTextField(
@@ -198,7 +261,7 @@ fun DetailTextFields(
     Spacing(height = 12)
     DetailTextField(
         identifier = "Weight",
-        placeholder = "Enter weight",
+        placeholder = "Enter weight(in KG)",
         icon = Icons.Default.LineWeight,
         weight,
         onWeightChange
@@ -206,7 +269,7 @@ fun DetailTextFields(
     Spacing(height = 12)
     DetailTextField(
         identifier = "Height",
-        placeholder = "Enter height",
+        placeholder = "Enter height(in cm)",
         icon = Icons.Default.Numbers,
         height,
         onHeightChange
@@ -220,19 +283,38 @@ fun DetailTextFields(
         onGenderChange
     )
     Spacing(height = 12)
+    DropDownInfo(dietPreference,onDietChange)
+    Spacing(height = 12)
     AllergiesView(onShowBottomSheet, allergies)
 }
 
 @Composable
+fun DropDownInfo(dietPreference: String, onDietChange: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+        AppTextField(
+            identifier = "Reason for joining",
+            value = dietPreference,
+            onValueChange = onDietChange,
+            placeholder = {
+                Text("Why do you want to join?")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+    }
+
+@SuppressLint("SuspiciousIndentation")
+@Composable
 fun AllergiesView(onShowBottomSheet: () -> Unit, allergies: List<String>) {
     val state = rememberLazyListState()
-        Text(
-            text = "Choose allergies", style = MaterialTheme.typography.headlineSmall.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal
-            )
+    Text(
+        text = "Choose allergies", style = MaterialTheme.typography.headlineSmall.copy(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal
         )
-        Spacing(height = 8)
+    )
+    Spacing(height = 8)
     if (allergies.isEmpty()) {
         TextButton(
             onClick = { onShowBottomSheet() },
@@ -258,21 +340,25 @@ fun AllergiesView(onShowBottomSheet: () -> Unit, allergies: List<String>) {
                 .clickable { onShowBottomSheet() }
                 .padding(16.dp)
         ) {
-            itemsIndexed(allergies) { index , allergy ->
-              Row(
-                  verticalAlignment = Alignment.CenterVertically
-              ) {
-                  Column(
-                      modifier = Modifier
-                          .clip(CircleShape)
-                          .background(MaterialTheme.colorScheme.outlineVariant)
-                  ) {
-                      Text(text = "${(index+1)}", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier
-                          .padding(horizontal = 6.dp, vertical = 2.dp))
-                  }
-                  Spacing(width = 4)
-                  Text(allergy)
-              }
+            itemsIndexed(allergies) { index, allergy ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Text(
+                            text = "${(index + 1)}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    Spacing(width = 4)
+                    Text(allergy)
+                }
                 Spacing(width = 12)
             }
         }
@@ -361,8 +447,9 @@ fun DetailTextField(
                 imageVector = icon, contentDescription = identifier, modifier = Modifier
                     .size(20.dp)
             )
-        }
-    )
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
 }
 
 

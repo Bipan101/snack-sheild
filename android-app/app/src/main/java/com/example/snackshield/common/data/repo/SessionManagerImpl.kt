@@ -15,20 +15,15 @@ class SessionManagerImpl @Inject constructor(
         private const val USER_ID = "id"
         private const val USER_NAME = "name"
         private const val USER_EMAIL = "email"
-        private const val USER_PROFILE = "profile"
-        private const val USER_TOKEN = "token"
     }
 
     override fun getUser(): User? {
         val userName = sharedPreferences.getString(USER_NAME, null)
         val userEmail = sharedPreferences.getString(USER_EMAIL, null)
-        val userToken = sharedPreferences.getString(USER_TOKEN, null)
         val userIdString = sharedPreferences.getString(USER_ID, null)
-        val userProfile = sharedPreferences.getString(USER_PROFILE, null)
-        return if (userName != null && userEmail != null && userIdString != null && userToken != null) {
+        return if (userName != null && userEmail != null && userIdString != null) {
             try {
-                val userId = userIdString.toInt()
-                User(id = userId, name = userName, email = userEmail, token = userToken)
+                User(id = userIdString, name = userName, email = userEmail)
             } catch (e: NumberFormatException) {
                 null
             }
@@ -43,8 +38,6 @@ class SessionManagerImpl @Inject constructor(
             putString(USER_ID, user.id.toString())
             putString(USER_NAME, user.name)
             putString(USER_EMAIL, user.email)
-            putString(USER_PROFILE, "")
-            putString(USER_TOKEN, user.token)
             apply()
         }
     }
@@ -54,8 +47,6 @@ class SessionManagerImpl @Inject constructor(
             putString(USER_ID, user.id.toString())
             putString(USER_NAME, user.name)
             putString(USER_EMAIL, user.email)
-            putString(USER_PROFILE, "")
-            putString(USER_TOKEN, user.token)
             apply()
         }
     }

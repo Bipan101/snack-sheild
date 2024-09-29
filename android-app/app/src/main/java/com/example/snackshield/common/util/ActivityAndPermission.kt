@@ -83,3 +83,6 @@ object ActivityAndPermission {
 enum class StorageAccess {
     Checking ,NotAllowed  , Partial , Full, None
 }
+enum class Permission {
+    Allowed, NotAllowed, Checking
+}

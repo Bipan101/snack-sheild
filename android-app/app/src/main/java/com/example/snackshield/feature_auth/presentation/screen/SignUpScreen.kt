@@ -1,5 +1,6 @@
 package com.example.snackshield.feature_auth.presentation.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,11 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.snackshield.common.components.ConfirmDialog
 import com.example.snackshield.common.components.Spacing
 import com.example.snackshield.feature_auth.domain.model.SignUp
 import com.example.snackshield.feature_auth.presentation.AuthEvents
@@ -42,7 +45,10 @@ fun SignUpScreen(goBack: () -> Unit, toDetail: () -> Unit, authViewModel: AuthVi
     }
     val event = authViewModel::onEvent
     val state by authViewModel.authState.collectAsState()
-
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    BackHandler(enabled = true) {
+        showConfirmDialog = true
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -58,13 +64,19 @@ fun SignUpScreen(goBack: () -> Unit, toDetail: () -> Unit, authViewModel: AuthVi
                 onEmailChange = { email = it },
                 onPasswordChange = { password = it },
                 onSubmit = {
-                    event.invoke(AuthEvents.signUp(SignUp(name, email, password)))
+                    event.invoke(AuthEvents.UserSignUp(SignUp(name, email, password)))
                 },
                 goBack,
                 toDetail,
                 state
             )
         }
+    }
+    if (showConfirmDialog) {
+        ConfirmDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            goBack = goBack
+        )
     }
 }
 
@@ -95,7 +107,6 @@ private fun SignUpView(
                 SubmitButton(text = state.error) {
                     onSubmit()
                 }
-                toDetail()
 
             }
 
@@ -103,7 +114,6 @@ private fun SignUpView(
                 SubmitButton(text = "Loading....") {
 
                 }
-                toDetail()
 
             }
 
@@ -111,8 +121,6 @@ private fun SignUpView(
                 SubmitButton(text = "Sign Up") {
                     onSubmit()
                 }
-                toDetail()
-
             }
 
             AuthUiState.Success -> {

@@ -1,17 +1,21 @@
 package com.example.snackshield.feature_auth.presentation
 
 import android.util.Log
+import android.view.View
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.snackshield.common.domain.repo.SessionManager
+import com.example.snackshield.feature_auth.domain.model.Detail
 import com.example.snackshield.feature_auth.domain.model.SignIn
 import com.example.snackshield.feature_auth.domain.model.SignUp
 import com.example.snackshield.feature_auth.domain.model.User
 import com.example.snackshield.feature_auth.domain.repo.AuthRepo
+import com.example.snackshield.feature_scan.presentation.ScanState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
@@ -27,10 +31,36 @@ class AuthViewModel @Inject constructor(
 
     private val _authState = MutableStateFlow<AuthUiState>(AuthUiState.Remaining)
     val authState: StateFlow<AuthUiState> = _authState.asStateFlow()
+    private val _state = MutableStateFlow(AuthState())
+    val state: StateFlow<AuthState> = _state.asStateFlow()
     fun onEvent(event: AuthEvents) {
         when (event) {
-            is AuthEvents.signIn -> signIn(event.signIn)
-            is AuthEvents.signUp -> signUp(event.signUp)
+            is AuthEvents.UserSignIn -> signIn(event.signIn)
+            is AuthEvents.UserSignUp -> signUp(event.signUp)
+            is AuthEvents.UserDetail -> userDetail(event.detail)
+            AuthEvents.GetUserId -> getUserId()
+        }
+    }
+    private fun getUserId() {
+        val userId = sessionManager.getUser()!!.id
+        Log.d(TAG, "getUserId: $userId")
+        _state.update { it.copy(userId = userId) }
+    }
+    private fun userDetail(detail: Detail) {
+        _authState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            try {
+                val response = authRepo.userDetails(detail)
+                Log.d(TAG, "signIn: $response")
+                if (response != null) {
+                    _authState.value = AuthUiState.Success
+                } else {
+                    _authState.value = AuthUiState.Error("Response is null")
+                }
+            } catch (e : IOException) {
+                _authState.value = e.message?.let { AuthUiState.Error(it) }
+                    .run { AuthUiState.Error("Internal error") }
+            }
         }
     }
 
@@ -46,7 +76,6 @@ class AuthViewModel @Inject constructor(
                         User(
                             id = response.id,
                             email = response.email,
-                            token = response.token,
                             name = response.name
                         )
                     )
@@ -72,7 +101,6 @@ class AuthViewModel @Inject constructor(
                         User(
                             id = response.id,
                             email = response.email,
-                            token = response.token,
                             name = response.name
                         )
                     )

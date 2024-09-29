@@ -2,7 +2,6 @@ package com.example.snackshield.common.di
 
 import android.content.Context
 import com.example.snackshield.common.constants.NetworkConstants
-import com.example.snackshield.common.data.network.AuthInterceptor
 import com.example.snackshield.common.data.repo.SessionManagerImpl
 import com.example.snackshield.common.domain.repo.SessionManager
 import dagger.Module
@@ -13,6 +12,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit.Builder
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -33,7 +33,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-        return OkHttpClient.Builder().addInterceptor(authInterceptor).build()
+    fun providesOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS) // Connection timeout
+            .readTimeout(60, TimeUnit.SECONDS)    // Read timeout
+            .writeTimeout(60, TimeUnit.SECONDS)   // Write timeout
+            .build()
     }
+
 }

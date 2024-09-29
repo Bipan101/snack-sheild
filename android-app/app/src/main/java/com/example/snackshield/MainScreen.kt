@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.snackshield.common.domain.repo.SessionManager
 import com.example.snackshield.feature_auth.presentation.AuthViewModel
+import com.example.snackshield.feature_scan.presentation.ScanViewModel
 import com.example.snackshield.navigation.navgraph.AuthNavGraph
 import com.example.snackshield.navigation.navgraph.HomeNavGraph
 import com.example.snackshield.navigation.navgraph.authNavGraph
@@ -20,6 +21,7 @@ import com.example.snackshield.navigation.navgraph.homeNavGraph
 fun MainScreen(sessionManager: SessionManager) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = hiltViewModel()
+    val scanViewModel : ScanViewModel = hiltViewModel()
     Scaffold(
         modifier = Modifier
             .fillMaxSize(),
@@ -32,18 +34,17 @@ fun MainScreen(sessionManager: SessionManager) {
                 navController = navController,
                 startDestination = getNavDestination(sessionManager)
             ) {
-                authNavGraph(navController, authViewModel)
-                homeNavGraph(navController)
+                authNavGraph(navController)
+                homeNavGraph(navController,scanViewModel)
             }
         }
     }
 }
 
 fun getNavDestination(sessionManager: SessionManager): String {
-    return HomeNavGraph.HOME_ROUTE
-//    return if (sessionManager.getUser() != null && sessionManager.getUser()!!.token.isNotEmpty()) {
-//        HomeNavGraph.HOME_ROUTE
-//    } else {
-//        AuthNavGraph.AUTH_ROUTE
-//    }
+    return if (sessionManager.getUser() != null && sessionManager.getUser()!!.id.isNotEmpty()) {
+        HomeNavGraph.HOME_ROUTE
+    } else {
+        AuthNavGraph.AUTH_ROUTE
+    }
 }

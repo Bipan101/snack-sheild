@@ -51,7 +51,7 @@ fun SignInScreen(toSignUp: () -> Unit, toHome: () -> Unit, authViewModel: AuthVi
                 onEmailChange = { email = it },
                 onPasswordChange = { password = it },
                 onSubmit = {
-                    event.invoke(AuthEvents.signIn(SignIn(email, password)))
+                    event.invoke(AuthEvents.UserSignIn(SignIn(email, password)))
                 },
                 toSignUp,
                 toHome,

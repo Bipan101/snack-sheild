@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -42,11 +43,12 @@ fun AppTopBar(identifier: String, goBack: () -> Unit) {
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold
-                )
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
             )
         }
-        Spacing(height = 4)
-        HorizontalDivider()
     }
 
 }
