@@ -193,6 +193,7 @@ fun ScanFoodScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse : ()
             checkAndLaunchCameraPermission,
             checkAndLaunchGalleryPermission,
             onSubmit = {
+                event.invoke(ScanEvent.SaveImage(imageUri))
                 event.invoke(ScanEvent.DetectFromImage(imageUri,context))
             },
             scanState,

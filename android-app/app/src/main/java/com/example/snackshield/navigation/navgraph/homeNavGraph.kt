@@ -128,6 +128,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavController,scanViewModel: Sca
             },
         ) {
             HomeScreen(
+                scanViewModel,
                 toSearch = { navController.navigateWithSingleTop(HomeNavGraph.HOME_SEARCH_SCREEN) },
                 toProfile = {},
                 toBarcode = { navController.navigateWithSingleTop(HomeNavGraph.BARCODE_SCAN_SCREEN) },
@@ -214,7 +215,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavController,scanViewModel: Sca
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
-            RecommendResponseScreen(scanViewModel, goBack = { navController.navigateWithSingleTop(HomeNavGraph.HOME_SCREEN) })
+            RecommendResponseScreen(scanViewModel, goBack = { navController.navigate(HomeNavGraph.HOME_SCREEN) })
         }
         composable(
             route = HomeNavGraph.TEXT_SCAN_RESPONSE_SCREEN,
@@ -223,7 +224,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavController,scanViewModel: Sca
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
-            ScanTextResponseScreen(scanViewModel, goBack = { navController.navigateWithSingleTop(HomeNavGraph.HOME_SCREEN) })
+            ScanTextResponseScreen(scanViewModel, goBack = { navController.navigate(HomeNavGraph.HOME_SCREEN) })
         }
         composable(
             route = HomeNavGraph.BARCODE_SCAN_RESPONSE_SCREEN,
@@ -232,7 +233,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavController,scanViewModel: Sca
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
-            ScanBarcodeResponseScreen(scanViewModel, goBack = { navController.navigateWithSingleTop(HomeNavGraph.HOME_SCREEN) })
+            ScanBarcodeResponseScreen(scanViewModel, goBack = { navController.navigate(HomeNavGraph.HOME_SCREEN) })
         }
         composable(
             route = HomeNavGraph.FOOD_SCAN_RESPONSE_SCREEN,
@@ -241,7 +242,7 @@ fun NavGraphBuilder.homeNavGraph(navController: NavController,scanViewModel: Sca
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
             popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) },
         ) {
-            ScanImageResponseScreen(scanViewModel, goBack = { navController.navigateWithSingleTop(HomeNavGraph.HOME_SCREEN) })
+            ScanImageResponseScreen(scanViewModel,  goBack = { navController.navigate(HomeNavGraph.HOME_SCREEN) })
         }
     }
 }

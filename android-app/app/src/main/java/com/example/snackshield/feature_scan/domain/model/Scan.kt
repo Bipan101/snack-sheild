@@ -6,13 +6,8 @@ import com.example.snackshield.feature_scan.data.model.NutrientRequestDto
 import kotlinx.serialization.Serializable
 
 data class Barcode(
-    val barcode : String
-) {
-    fun toBarcodeDto() = BarcodeDto(
-        barcode = barcode
-    )
-}
-
+    val barcode : String,
+)
 
 data class ProductData(
     val data: DataFromBarcode?,
@@ -24,7 +19,8 @@ data class DataFromBarcode(
     val productName: String?,
     val ingredientData: IngredientData?,
     val nutrientPercentages: NutrientPercentages?,
-    val nutritionDataPerGm: String?
+    val nutritionDataPerGm: String?,
+    val isSafeForUser : Boolean
 )
 
 
@@ -103,7 +99,8 @@ data class DetectionData(
     val inference_id: String?,
     val time: Double?,
     val image: ImageDetails?,
-    val predictions: List<Prediction>?
+    val predictions: List<Prediction>?,
+    val isSafeForUser: Boolean
 )
 
 @Serializable
@@ -123,3 +120,9 @@ data class Prediction(
     val class_id: Int?,
     val detection_id: String?
 )
+
+//Label
+
+data class LabelData(
+    val allergen: List<String>?, // Assuming allergens are represented as a list of strings
+    val isSafeForUser: Boolean)

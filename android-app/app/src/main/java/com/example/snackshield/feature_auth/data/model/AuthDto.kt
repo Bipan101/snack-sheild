@@ -4,6 +4,7 @@ import com.example.snackshield.feature_auth.domain.model.Detail
 import com.example.snackshield.feature_auth.domain.model.DetailData
 import com.example.snackshield.feature_auth.domain.model.User
 import com.example.snackshield.feature_auth.domain.model.UserData
+import com.example.snackshield.feature_auth.domain.model.UserId
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
@@ -86,5 +87,9 @@ data class DetailDataDto(
 }
 @Serializable
 data class UserIdDto (
-    val id : String,
-)
+    val userId : String,
+) {
+    fun toUserId() = UserId(
+        userId = userId
+    )
+}

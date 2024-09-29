@@ -219,6 +219,7 @@ fun ScanBarcodeScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse :
             scannedText,
             scanState,
             onSubmit = {
+                event.invoke(ScanEvent.SaveImage(imageUri))
                 event.invoke(ScanEvent.GetDataFromBarcode(it))
             },
             toResponse

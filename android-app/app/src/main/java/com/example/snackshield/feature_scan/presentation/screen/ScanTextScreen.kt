@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,12 +51,14 @@ import com.example.snackshield.common.util.ActivityAndPermission
 import com.example.snackshield.common.util.Permission
 import com.example.snackshield.common.util.StorageAccess
 import com.example.snackshield.feature_auth.presentation.components.SubmitButton
+import com.example.snackshield.feature_scan.presentation.ScanEvent
+import com.example.snackshield.feature_scan.presentation.ScanUiState
 import com.example.snackshield.feature_scan.presentation.ScanViewModel
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 @Composable
-fun ScanTextScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse : () -> Unit) {
+fun ScanTextScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse: () -> Unit) {
     val context = LocalContext.current
     var storageAccess by remember {
         mutableStateOf(StorageAccess.Checking)
@@ -180,7 +183,8 @@ fun ScanTextScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse : ()
     }
     // Text recognizer initialization
     val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
+    val event = viewModel::onEvent
+    val scanState by viewModel.scanState.collectAsState()
     Column {
         AppTopBar(identifier = "Scan label") {
             goBack()
@@ -206,6 +210,12 @@ fun ScanTextScreen(viewModel: ScanViewModel, goBack: () -> Unit, toResponse : ()
                     }
             },
             scannedText,
+            onSubmit = {
+                event.invoke(ScanEvent.SaveImage(imageUri))
+                event.invoke(ScanEvent.DetectFromLabel(ingredientData = scannedText))
+            },
+            scanState,
+            toResponse
         )
     }
 
@@ -219,7 +229,10 @@ fun ScanTextView(
     checkCameraPermission: () -> Unit,
     checkGalleryPermission: () -> Unit,
     textScan: () -> Unit,
-    scannedText: String
+    scannedText: String,
+    onSubmit: () -> Unit,
+    scanState: ScanUiState,
+    toResponse: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -262,9 +275,30 @@ fun ScanTextView(
                 )
             }
             Spacing(height = 24)
-            SubmitButton(text = "Done") {
+            when (scanState) {
+                is ScanUiState.Error -> SubmitButton(text = scanState.error) {
+                    onSubmit()
+                }
 
+                ScanUiState.Loading -> SubmitButton(text = "Loading...") {
+
+                }
+
+                ScanUiState.Remaining -> {
+                    SubmitButton(text = "Done") {
+                        onSubmit()
+                    }
+                }
+
+                ScanUiState.Success -> {
+
+                    SubmitButton(text = "Done") {
+
+                    }
+                    toResponse()
+                }
             }
+
         }
     }
 }

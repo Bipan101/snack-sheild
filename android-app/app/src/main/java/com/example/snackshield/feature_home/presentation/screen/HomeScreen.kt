@@ -1,6 +1,6 @@
 package com.example.snackshield.feature_home.presentation.screen
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DocumentScanner
@@ -22,21 +24,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.snackshield.R
+import com.example.snackshield.common.components.Spacing
 import com.example.snackshield.feature_home.presentation.components.SearchBoxTopBar
+import com.example.snackshield.feature_scan.presentation.ScanViewModel
 
 @Composable
 fun HomeScreen(
+    viewModel: ScanViewModel,
     toSearch: () -> Unit, toProfile: () -> Unit, toBarcode: () -> Unit,
     toLabel: () -> Unit, toFood: () -> Unit, toRecommend: () -> Unit
 ) {
+    LaunchedEffect(true) {
+        viewModel.resetState()
+    }
     Scaffold(
         topBar = {
             SearchBoxTopBar(
@@ -50,6 +60,7 @@ fun HomeScreen(
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
             HomeView(toBarcode, toLabel, toFood, toRecommend)
+            HomeRecentData()
         }
     }
 }
@@ -63,7 +74,6 @@ fun HomeView(
 ) {
     HomeOptions(toBarcode, toLabel, toFood, toRecommend)
     HorizontalDivider()
-    HomeRecentData()
 }
 
 @Composable
@@ -127,20 +137,66 @@ fun HomeOption(text: String, icon: ImageVector, onClick: () -> Unit) {
 fun HomeRecentData(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+            .fillMaxSize()
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        item {
-            Image(
-                painter = painterResource(R.drawable.nothing_here),
-                contentDescription = "nothing_here"
-            )
-            Text(
-                "Your all activity will appear here",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal),
-                textAlign = TextAlign.Center
-            )
+        items(recentData) { data ->
+            DataView(data)
+            Spacing(12)
         }
     }
 }
+
+@Composable
+fun DataView(data: RecentData) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = data.image,
+            contentDescription = "image",
+            modifier = Modifier
+                .padding(4.dp)
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop,
+        )
+        Spacing(width = 12)
+        Column() {
+            Text(
+                data.text, style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                )
+            )
+            Spacing(4)
+            when (data.status) {
+                true -> Text("This is safe for you to consume")
+                false -> Text("This is potentially unsafe for you to consume")
+            }
+        }
+    }
+}
+
+data class RecentData(
+    val text: String,
+    val image: Int,
+    val status: Boolean
+)
+
+val recentData = listOf(
+    RecentData("Lasagna", R.drawable.img, false),
+    RecentData("Burger", R.drawable.img_1, true),
+    RecentData("Spaghetti", R.drawable.img_2, false),
+    RecentData("Sandwich", R.drawable.img_3, true),
+    RecentData("Burger and Fries", R.drawable.img_4, false),
+    RecentData("Nugget", R.drawable.img_5, false),
+    RecentData("Pasta", R.drawable.img_6, true),
+    RecentData("Mushroom", R.drawable.img_7, false),
+    RecentData("Pizza", R.drawable.img_8, true),
+    )

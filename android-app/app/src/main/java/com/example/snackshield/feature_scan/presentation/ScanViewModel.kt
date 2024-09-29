@@ -12,6 +12,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.snackshield.common.domain.repo.SessionManager
+import com.example.snackshield.feature_scan.domain.model.IngredientData
 import com.example.snackshield.feature_scan.domain.model.NutrientRequest
 import com.example.snackshield.feature_scan.domain.repo.ScanRepo
 import com.google.mlkit.vision.common.InputImage
@@ -47,14 +48,39 @@ class ScanViewModel @Inject constructor(
             is ScanEvent.GetDataFromBarcode -> getDataFromBarcode(event.barcode)
             is ScanEvent.Recommend -> getRecommendation(event.nutrientRequest)
             is ScanEvent.DetectFromImage -> detectFromImage(event.imageUri,event.context)
+            is ScanEvent.DetectFromLabel -> detectFromLabel(event.ingredientData)
+            is ScanEvent.SaveImage -> saveImage(event.imageUri)
         }
     }
 
     fun resetState() {
         _scanState.value = ScanUiState.Remaining
+        _state.value = ScanState()
     }
 
-
+    private fun saveImage(imageUri: Uri) {
+        _state.update { it.copy(imageUri = imageUri) }
+    }
+    private fun detectFromLabel(ingredientData: String) {
+        _scanState.value = ScanUiState.Loading
+        val userId = sessionManager.getUser()!!.id
+        viewModelScope.launch {
+            try {
+                val response = scanRepo.detectFromLabel(ingredientData,userId)
+                Log.d(TAG, "detectFromLabel: $response")
+                if (response != null) {
+                    _scanState.value = ScanUiState.Success
+                    _state.update { it.copy(detectFromLabel = response) }
+                } else {
+                    _scanState.value = ScanUiState.Error("Response is null")
+                }
+            } catch (e: IOException) {
+                _scanState.value = e.message?.let { ScanUiState.Error(it) }
+                    .run { ScanUiState.Error("Internal error") }
+                Log.e(TAG, "detectFromLabel: $e")
+            }
+        }
+    }
     private fun detectFromImage(imageUri: Uri,context: Context) {
         _scanState.value = ScanUiState.Loading
         val userId = sessionManager.getUser()!!.id
@@ -81,9 +107,11 @@ class ScanViewModel @Inject constructor(
 
     private fun getDataFromBarcode(barcode: String) {
         _scanState.value = ScanUiState.Loading
+        val userId = sessionManager.getUser()!!.id
+        Log.d(TAG, "getDataFromBarcode: $userId")
         viewModelScope.launch {
             try {
-                val response = scanRepo.barcode(barcode)
+                val response = scanRepo.barcode(barcode,userId)
                 Log.d(TAG, "getDataFromBarcode: $response")
                 if (response != null) {
                     _scanState.value = ScanUiState.Success

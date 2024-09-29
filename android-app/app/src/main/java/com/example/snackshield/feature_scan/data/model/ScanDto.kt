@@ -4,6 +4,7 @@ import com.example.snackshield.feature_scan.domain.model.DataFromBarcode
 import com.example.snackshield.feature_scan.domain.model.DetectionData
 import com.example.snackshield.feature_scan.domain.model.ImageDetails
 import com.example.snackshield.feature_scan.domain.model.IngredientData
+import com.example.snackshield.feature_scan.domain.model.LabelData
 import com.example.snackshield.feature_scan.domain.model.NutrientPercentages
 import com.example.snackshield.feature_scan.domain.model.Prediction
 import com.example.snackshield.feature_scan.domain.model.Recipe
@@ -12,7 +13,8 @@ import kotlinx.serialization.Serializable
 
 //Barcode
 data class BarcodeDto(
-    val barcode: String
+    val barcode: String,
+    val userId : String
 )
 
 @Serializable
@@ -26,13 +28,15 @@ data class DataFromBarcodeDto(
     val productName: String?,
     val ingredientData: IngredientDataDto?,
     val nutrientPercentages: NutrientPercentagesDto?,
-    val nutritionDataPerGm: String?
+    val nutritionDataPerGm: String?,
+    val isSafeForUser : Boolean,
 ) {
     fun toData() = DataFromBarcode(
         productName = productName,
         ingredientData = ingredientData?.toIngredients(),
         nutrientPercentages = nutrientPercentages?.toNutrientPercentage(),
-        nutritionDataPerGm = nutritionDataPerGm
+        nutritionDataPerGm = nutritionDataPerGm,
+        isSafeForUser = isSafeForUser
     )
 }
 
@@ -163,10 +167,11 @@ data class DetectionDataDto(
     val inference_id: String?,
     val time: Double?,
     val image: ImageDetailsDto?,
-    val predictions: List<PredictionDto>?
+    val predictions: List<PredictionDto>?,
+    val isSafeForUser: Boolean
 ) {
     fun toDetection() = DetectionData(
-        inference_id,time,image = image!!.toImageDetail() ,predictions = predictions?.map { it.toPrediction() }
+        inference_id,time,image = image!!.toImageDetail() ,predictions = predictions?.map { it.toPrediction() },isSafeForUser
     )
 }
 
@@ -195,5 +200,27 @@ data class PredictionDto(
 ) {
     fun toPrediction() = Prediction(
         x, y, width, height, confidence, `class`, class_id, detection_id
+    )
+}
+
+//Label
+@Serializable
+data class LabelDto(
+    val ingredients: String,
+    val userId: String
+
+)
+
+data class LabelResponseDto(
+    val data: LabelDataDto,
+    val message: String
+)
+
+data class LabelDataDto(
+    val allergen: List<String>?, // Assuming allergens are represented as a list of strings
+    val isSafeForUser: Boolean
+) {
+    fun toLabelData() = LabelData(
+        allergen,isSafeForUser
     )
 }

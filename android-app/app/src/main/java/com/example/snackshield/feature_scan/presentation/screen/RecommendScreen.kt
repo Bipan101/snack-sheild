@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.snackshield.common.components.AppTextField
 import com.example.snackshield.common.components.AppTopBar
+import com.example.snackshield.common.components.SliderComp
 import com.example.snackshield.common.components.Spacing
 import com.example.snackshield.feature_auth.presentation.components.SubmitButton
 import com.example.snackshield.feature_scan.domain.model.NutrientInput
@@ -170,6 +172,7 @@ fun RecommendView(
         modifier = Modifier
             .fillMaxSize()
             .padding(12.dp)
+            .imePadding()
     ) {
         items(fields) { field ->
             SliderComp(
@@ -209,27 +212,6 @@ fun RecommendView(
     }
 }
 
-@Composable
-fun SliderComp(
-    identifier: String,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    start: Float,
-    end: Float
-) {
-    Column {
-        Text(
-            text = "$identifier: ${value.toInt()}",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal
-            )
-        )
-        Spacing(height = 8)
-        Slider(value = value, onValueChange = onValueChange, valueRange = start..end)
-        Spacing(height = 16)
-    }
-}
 
 @Composable
 fun AddIngredients(onAddClick: (String) -> Unit, ingredients: List<String>) {

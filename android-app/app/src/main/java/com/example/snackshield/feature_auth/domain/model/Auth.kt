@@ -3,6 +3,7 @@ package com.example.snackshield.feature_auth.domain.model
 import com.example.snackshield.feature_auth.data.model.DetailsDto
 import com.example.snackshield.feature_auth.data.model.SignInDto
 import com.example.snackshield.feature_auth.data.model.SignUpDto
+import com.example.snackshield.feature_auth.data.model.UserIdDto
 import kotlinx.serialization.Serializable
 
 
@@ -66,3 +67,11 @@ data class DetailData(
     val dietPreference: String?, // Nullable type for dietPreference
     val id: String
 )
+
+data class UserId(
+    val userId: String
+) {
+    fun toUserIdDto() = UserIdDto(
+        userId = userId
+    )
+}

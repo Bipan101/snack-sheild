@@ -256,7 +256,8 @@ fun DetailTextFields(
         placeholder = "Enter age",
         icon = Icons.Default.Numbers,
         age,
-        onAgeChange
+        onAgeChange,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
     Spacing(height = 12)
     DetailTextField(
@@ -264,7 +265,8 @@ fun DetailTextFields(
         placeholder = "Enter weight(in KG)",
         icon = Icons.Default.LineWeight,
         weight,
-        onWeightChange
+        onWeightChange,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
     Spacing(height = 12)
     DetailTextField(
@@ -272,7 +274,8 @@ fun DetailTextFields(
         placeholder = "Enter height(in cm)",
         icon = Icons.Default.Numbers,
         height,
-        onHeightChange
+        onHeightChange,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
     Spacing(height = 12)
     DetailTextField(
@@ -280,7 +283,8 @@ fun DetailTextFields(
         placeholder = "Enter Gender",
         icon = Icons.Default.Numbers,
         gender,
-        onGenderChange
+        onGenderChange,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
     )
     Spacing(height = 12)
     DropDownInfo(dietPreference,onDietChange)
@@ -290,7 +294,6 @@ fun DetailTextFields(
 
 @Composable
 fun DropDownInfo(dietPreference: String, onDietChange: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
 
         AppTextField(
             identifier = "Reason for joining",
@@ -433,7 +436,8 @@ fun DetailTextField(
     placeholder: String,
     icon: ImageVector,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    keyboardOptions: KeyboardOptions
 ) {
     AppTextField(
         identifier = identifier,
@@ -448,7 +452,7 @@ fun DetailTextField(
                     .size(20.dp)
             )
         },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        keyboardOptions = keyboardOptions
         )
 }
 
