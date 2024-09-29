@@ -1,9 +1,10 @@
-import { IsArray, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class AllergenDetectionDto {
   @IsArray()
-  ingredients: string[];
+  ingredients: string;
 
   @IsString()
-  userId: string;
+  @IsOptional()
+  userId?: string;
 }

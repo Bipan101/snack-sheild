@@ -27,7 +27,11 @@ export class AllergenDetectionController {
       await this.allergenDetectionService.detectAllergenByLabel(
         allergenDetectionData,
       );
-    return { data: detectedAllergen, message: 'user created Successfully' };
+
+    return {
+      data: detectedAllergen,
+      message: 'allergen detected Successfully',
+    };
   }
 
   @Post('/image')
@@ -63,13 +67,19 @@ export class AllergenDetectionController {
       },
     }),
   )
-  async detectAllergenByImage(@UploadedFile() file: Express.Multer.File) {
+  async detectAllergenByImage(
+    @UploadedFile() file: Express.Multer.File,
+    userId: string,
+  ) {
     try {
       if (!file) {
         throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
       }
       const detectedAllergen =
-        await this.allergenDetectionService.detectAllergenByImage(file?.path);
+        await this.allergenDetectionService.detectAllergenByImage(
+          file?.path,
+          userId,
+        );
 
       return {
         data: detectedAllergen,

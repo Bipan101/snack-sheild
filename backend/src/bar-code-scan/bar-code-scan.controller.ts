@@ -14,8 +14,11 @@ export class BarCodeScanController {
   constructor(private readonly barcodeService: BarCodeScanService) {}
 
   @Post()
-  async create(@Body() req: { barcode: any }) {
-    const barcodeData = await this.barcodeService.getData(req.barcode);
+  async create(@Body() req: { barcode: any; userId: string }) {
+    const barcodeData = await this.barcodeService.getData(
+      req.barcode,
+      req.userId,
+    );
     return { data: barcodeData, message: 'Bar Code Data fetched successfully' };
   }
 }

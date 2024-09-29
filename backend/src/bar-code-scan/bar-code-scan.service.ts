@@ -1,23 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { UserDetailsService } from 'src/user-detail/user-detail.service';
 
 @Injectable()
 export class BarCodeScanService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly userDetailsService: UserDetailsService,
 
-  async getData(barcode: string) {
+    private readonly httpService: HttpService,
+  ) {}
+
+  async getData(barcode: string, userId?: string) {
     console.log(barcode);
-    const res = await this.getBarCodeData(barcode);
+    const res = await this.getBarCodeData(barcode, userId);
     return res;
   }
 
-  async getBarCodeData(barcode: string): Promise<any> {
+  async getBarCodeData(barcode: string, userId?: string): Promise<any> {
+    barcode = '8906013030015';
     const url = `https://world.openfoodfacts.net/api/v2/product/${barcode}`;
     try {
       const response = await firstValueFrom(this.httpService.get(url));
       if (!response) {
         throw new Error();
+      }
+      let userAllergens = [];
+      let isSafeForUser = true;
+      if (userId) {
+        const UserDetails = await this.userDetailsService.findOne(userId);
+        userAllergens = UserDetails?.allergens;
       }
 
       const {
@@ -32,11 +44,18 @@ export class BarCodeScanService {
       const ingredientData =
         ingredients_text_with_allergens_fr &&
         this.processIngredientData(ingredients_text_with_allergens_fr);
+
+      ingredientData?.allergens?.forEach((prediction) => {
+        if (userAllergens?.includes(prediction)) {
+          isSafeForUser = false;
+        }
+      });
       return {
         productName: product_name,
         ingredientData: ingredientData,
         nutrientPercentages: nutrientPercentages,
         nutritionDataPerGm: nutrition_data_per,
+        isSafeForUser,
       };
     } catch (error) {
       throw new Error(error.message);

@@ -31,16 +31,16 @@ export class AllergenDetectionService {
 
     const detectedAllergens = new Set<string>();
 
+    // Convert the long ingredients string to lowercase for easier matching
+    const ingredientsLower = ingredients?.toLowerCase();
+    let isSafeForUser = true;
     for (const allergen of allergens) {
       if (allergensData[allergen]) {
         const keywords = allergensData[allergen];
-        for (const ingredient of ingredients) {
-          if (
-            keywords.some((keyword) =>
-              ingredient.toLowerCase().includes(keyword),
-            )
-          ) {
+        for (const keyword of keywords) {
+          if (ingredientsLower.includes(keyword.toLowerCase())) {
             detectedAllergens.add(allergen);
+            isSafeForUser = false;
             break;
           }
         }
@@ -48,11 +48,20 @@ export class AllergenDetectionService {
     }
 
     // Convert Set to Array and return
-    return Array.from(detectedAllergens);
+    const allergen = Array.from(detectedAllergens);
+    return { allergen, isSafeForUser };
   }
 
-  async detectAllergenByImage(filePath: string) {
+  async detectAllergenByImage(filePath: string, userId?: string) {
     try {
+      const userId = '2316407b-b321-4e12-96be-42dbdbd30f59';
+      console.log(userId);
+      let userAllergens = [];
+      let isSafeForUser = true;
+      if (userId) {
+        const UserDetails = await this.userDetailsService.findOne(userId);
+        userAllergens = UserDetails?.allergens;
+      }
       const imageBuffer = fs.readFileSync(filePath);
 
       // Resize the image and compress it using sharp
@@ -72,7 +81,15 @@ export class AllergenDetectionService {
         }),
       );
 
-      return response.data;
+      const predictions = response?.data?.predictions || [];
+
+      // Check if any allergen matches the prediction's class
+      predictions?.forEach((prediction) => {
+        if (userAllergens?.includes(prediction?.class)) {
+          isSafeForUser = false;
+        }
+      });
+      return { ...response?.data, isSafeForUser };
     } catch (error) {
       console.error('Error detecting allergen:', error);
     }
